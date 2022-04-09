@@ -1,0 +1,10 @@
+{
+  "name": "@ibm/audit-ci-yarn-workspace-root",
+  "description": "Test Yarn workspace root",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@ibm/audit-ci-yarn-workspace-test-helpers",
+  "description": "Test Yarn workspace test helpers",
+  "version": "1.0.0",
+  "dependencies": {},
+  "devDependencies": {}
+}

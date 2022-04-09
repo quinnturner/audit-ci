@@ -1,0 +1,9 @@
+{
+  "name": "@ibm/audit-ci-yarn-workspace-lib",
+  "description": "Test Yarn workspace lib",
+  "version": "1.0.0",
+  "dependencies": {
+    "@ibm/audit-ci-yarn-workspace-common": "^1.0.0"
+  },
+  "devDependencies": {}
+}
