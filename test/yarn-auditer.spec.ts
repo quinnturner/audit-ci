@@ -127,6 +127,8 @@ describe("yarn-auditer", function testYarnAuditer() {
             "GHSA-rvg8-pwq2-xj7q": {
               active: true,
             },
+          },
+          {
             "GHSA-hm7f-rq7q-j9xp|@builder.io/qwik": {
               active: true,
             },
@@ -202,6 +204,8 @@ describe("yarn-auditer", function testYarnAuditer() {
               active: true,
               expiry: new Date(Date.now() + 9000).toISOString(),
             },
+          },
+          {
             "GHSA-hm7f-rq7q-j9xp|@builder.io/qwik": {
               active: true,
               expiry: new Date(Date.now() + 9000).toISOString(),
@@ -230,7 +234,9 @@ describe("yarn-auditer", function testYarnAuditer() {
               active: true,
               expiry: new Date(Date.now() - 9000).toISOString(),
             },
-            "GHSA-hm7f-rq7q-j9xp|@builder.io/qwik": {
+          },
+          {
+            "*|@builder.io/qwik": {
               active: true,
               expiry: new Date(Date.now() - 9000).toISOString(),
             },
