@@ -1,5 +1,5 @@
 import { NPMAuditReportV2 } from "audit-types";
-import semver from "semver";
+import { lt } from "semver";
 import { describe, expect, it } from "vitest";
 import Allowlist from "../lib/allowlist.js";
 import { auditWithFullConfig, report } from "../lib/npm-auditor.js";
@@ -9,13 +9,13 @@ import {
   testDirectory,
 } from "./common.js";
 
-import untypedReportNpmAllowlistedPath from "./npm-allowlisted-path/npm7-output.json";
-import untypedReportNpmCritical from "./npm-critical/npm7-output.json";
-import untypedReportNpmHighSeverity from "./npm-high/npm7-output.json";
-import untypedReportNpmLow from "./npm-low/npm7-output.json";
-import untypedReportNpmModerateSeverity from "./npm-moderate/npm7-output.json";
-import untypedReportNpmNone from "./npm-none/npm7-output.json";
-import untypedReportNpmSkipDevelopment from "./npm-skip-dev/npm-output.json";
+import untypedReportNpmAllowlistedPath from "./npm-allowlisted-path/npm7-output.json" with { type: "json" };
+import untypedReportNpmCritical from "./npm-critical/npm7-output.json" with { type: "json" };
+import untypedReportNpmHighSeverity from "./npm-high/npm7-output.json" with { type: "json" };
+import untypedReportNpmLow from "./npm-low/npm7-output.json" with { type: "json" };
+import untypedReportNpmModerateSeverity from "./npm-moderate/npm7-output.json" with { type: "json" };
+import untypedReportNpmNone from "./npm-none/npm7-output.json" with { type: "json" };
+import untypedReportNpmSkipDevelopment from "./npm-skip-dev/npm-output.json" with { type: "json" };
 
 const reportNpmAllowlistedPath =
   untypedReportNpmAllowlistedPath as unknown as NPMAuditReportV2.Audit;
@@ -137,13 +137,7 @@ describe("npm7-auditor", () => {
       config({
         directory: testDirectory("npm-moderate"),
         levels: { moderate: true },
-        allowlist: new Allowlist([
-          {
-            "GHSA-rvg8-pwq2-xj7q": {
-              active: true,
-            },
-          },
-        ]),
+        allowlist: new Allowlist([{ "GHSA-rvg8-pwq2-xj7q": { active: true } }]),
       }),
       (_summary) => _summary,
     );
@@ -180,11 +174,7 @@ describe("npm7-auditor", () => {
         levels: { moderate: true },
         allowlist: new Allowlist([
           "GHSA-cff4-rrq6-h78w",
-          {
-            "GHSA-rvg8-pwq2-xj7q": {
-              active: false,
-            },
-          },
+          { "GHSA-rvg8-pwq2-xj7q": { active: false } },
         ]),
       }),
       (_summary) => _summary,
@@ -357,10 +347,7 @@ describe("npm7-auditor", () => {
   it("reports low severity", () => {
     const summary = report(
       reportNpmLow,
-      config({
-        directory: testDirectory("npm-low"),
-        levels: { low: true },
-      }),
+      config({ directory: testDirectory("npm-low"), levels: { low: true } }),
       (_summary) => _summary,
     );
     expect(summary).to.eql(
@@ -374,10 +361,7 @@ describe("npm7-auditor", () => {
   it("passes with no vulnerabilities", () => {
     const summary = report(
       reportNpmNone,
-      config({
-        directory: testDirectory("npm-none"),
-        levels: { low: true },
-      }),
+      config({ directory: testDirectory("npm-none"), levels: { low: true } }),
       (_summary) => _summary,
     );
     expect(summary).to.eql(summaryWithDefault());
@@ -397,7 +381,7 @@ describe("npm7-auditor", () => {
     }
     throw new Error("Expected audit to fail");
   });
-  semver.lt(nodeVersion, "20.0.0") &&
+  lt(nodeVersion, "20.0.0") &&
     it("fails with error code ECONNREFUSED on a live site with no registry", async () => {
       try {
         await auditWithFullConfig(

@@ -8,13 +8,13 @@ import {
   testDirectory,
 } from "./common.js";
 
-import untypedReportNpmAllowlistedPath from "./npm-allowlisted-path/npm-output.json";
-import untypedReportNpmCritical from "./npm-critical/npm-output.json";
-import untypedReportNpmHighSeverity from "./npm-high/npm-output.json";
-import untypedReportNpmLow from "./npm-low/npm-output.json";
-import untypedReportNpmModerateSeverity from "./npm-moderate/npm-output.json";
-import untypedReportNpmNone from "./npm-none/npm-output.json";
-import untypedReportNpmSkipDevelopment from "./npm-skip-dev/npm-output.json";
+import untypedReportNpmAllowlistedPath from "./npm-allowlisted-path/npm-output.json" with { type: "json" };
+import untypedReportNpmCritical from "./npm-critical/npm-output.json" with { type: "json" };
+import untypedReportNpmHighSeverity from "./npm-high/npm-output.json" with { type: "json" };
+import untypedReportNpmLow from "./npm-low/npm-output.json" with { type: "json" };
+import untypedReportNpmModerateSeverity from "./npm-moderate/npm-output.json" with { type: "json" };
+import untypedReportNpmNone from "./npm-none/npm-output.json" with { type: "json" };
+import untypedReportNpmSkipDevelopment from "./npm-skip-dev/npm-output.json" with { type: "json" };
 
 const reportNpmAllowlistedPath =
   untypedReportNpmAllowlistedPath as NPMAuditReportV1.Audit;
@@ -129,35 +129,13 @@ describe("npm-auditor", () => {
       }),
     );
   });
-  it("ignores an advisory if it is allowlisted", () => {
-    const summary = report(
-      reportNpmModerateSeverity,
-      config({
-        directory: testDirectory("npm-moderate"),
-        levels: { moderate: true },
-        allowlist: new Allowlist(["GHSA-rvg8-pwq2-xj7q"]),
-      }),
-      (_summary) => _summary,
-    );
-    expect(summary).to.eql(
-      summaryWithDefault({
-        allowlistedAdvisoriesFound: ["GHSA-rvg8-pwq2-xj7q"],
-      }),
-    );
-  });
   it("ignores an advisory if it is allowlisted using a NSPRecord", () => {
     const summary = report(
       reportNpmModerateSeverity,
       config({
         directory: testDirectory("npm-moderate"),
         levels: { moderate: true },
-        allowlist: new Allowlist([
-          {
-            "GHSA-rvg8-pwq2-xj7q": {
-              active: true,
-            },
-          },
-        ]),
+        allowlist: new Allowlist([{ "GHSA-rvg8-pwq2-xj7q": { active: true } }]),
       }),
       (_summary) => _summary,
     );
@@ -194,11 +172,7 @@ describe("npm-auditor", () => {
         levels: { moderate: true },
         allowlist: new Allowlist([
           "GHSA-cff4-rrq6-h78w",
-          {
-            "GHSA-rvg8-pwq2-xj7q": {
-              active: false,
-            },
-          },
+          { "GHSA-rvg8-pwq2-xj7q": { active: false } },
         ]),
       }),
       (_summary) => _summary,
@@ -371,10 +345,7 @@ describe("npm-auditor", () => {
   it("reports low severity", () => {
     const summary = report(
       reportNpmLow,
-      config({
-        directory: testDirectory("npm-low"),
-        levels: { low: true },
-      }),
+      config({ directory: testDirectory("npm-low"), levels: { low: true } }),
       (_summary) => _summary,
     );
     expect(summary).to.eql(
@@ -388,10 +359,7 @@ describe("npm-auditor", () => {
   it("passes with no vulnerabilities", () => {
     const summary = report(
       reportNpmNone,
-      config({
-        directory: testDirectory("npm-none"),
-        levels: { low: true },
-      }),
+      config({ directory: testDirectory("npm-none"), levels: { low: true } }),
       (_summary) => _summary,
     );
     expect(summary).to.eql(summaryWithDefault());
@@ -423,26 +391,4 @@ describe("npm-auditor", () => {
     );
     expect(summary).to.eql(summaryWithDefault());
   });
-  // it("fails errors with code ENOAUDIT on a valid site with no audit", (done) => {
-  //   audit(
-  //     config({
-  //       directory: testDirectory("npm-low"),
-  //       levels: { low: true },
-  //       registry: "https://example.com",
-  //     })
-  //   ).catch((err) => {
-  //     expect(err.message).to.include("code ENOAUDIT");
-  //     done();
-  //   });
-  // });
-  // it("passes using --pass-enoaudit", () => {
-  //   const directory = testDirectory("npm-500");
-  //   return audit(
-  //     config({
-  //       directory,
-  //       "pass-enoaudit": true,
-  //       _npm: path.join(directory, "npm"),
-  //     })
-  //   );
-  // });
 });

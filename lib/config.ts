@@ -1,7 +1,6 @@
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync } from "node:fs";
 import jju from "jju";
-// eslint-disable-next-line unicorn/import-style
-import * as path from "path";
+import path from "node:path";
 import { hideBin } from "yargs/helpers";
 import yargs from "yargs";
 import Allowlist, { type AllowlistRecord } from "./allowlist.js";
@@ -237,12 +236,7 @@ function mapArgvToAuditCiConfig(argv: AuditCiPreprocessedConfig) {
   const result: AuditCiFullConfig = {
     ...argv,
     "package-manager": resolvedPackageManager,
-    levels: mapVulnerabilityLevelInput({
-      low,
-      moderate,
-      high,
-      critical,
-    }),
+    levels: mapVulnerabilityLevelInput({ low, moderate, high, critical }),
     "report-type": mapReportTypeInput(argv),
     allowlist: allowlist,
     "extra-args": mapExtraArgumentsInput(argv),

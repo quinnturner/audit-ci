@@ -1,5 +1,5 @@
 import { GitHubAdvisoryId } from "audit-types";
-import { SpawnOptionsWithoutStdio } from "child_process";
+import { SpawnOptionsWithoutStdio } from "node:child_process";
 import { spawn } from "cross-spawn";
 import escapeStringRegexp from "escape-string-regexp";
 import eventStream from "event-stream";
@@ -140,8 +140,6 @@ export function runProgram(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   stderrListener: (data: any) => void,
 ) {
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
   const transform = new ReadlineTransform({ skipEmpty: true });
   const proc = spawn(command, arguments_, options);
   let recentMessage: string;
@@ -160,7 +158,6 @@ export function runProgram(
       }),
     )
     .pipe(
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-expect-error -- JSONStream.parse() accepts (pattern: any) when it should accept (pattern?: any)
       JSONStream.parse().on("error", () => {
         errorMessage = recentMessage;

@@ -7,13 +7,13 @@ import {
   testDirectory,
 } from "./common.js";
 
-import reportPnpmAllowlistedPath from "./pnpm-allowlisted-path/pnpm-output.json";
-import reportPnpmCritical from "./pnpm-critical/pnpm-output.json";
-import reportPnpmHighSeverity from "./pnpm-high/pnpm-output.json";
-import reportPnpmLow from "./pnpm-low/pnpm-output.json";
-import reportPnpmModerateSeverity from "./pnpm-moderate/pnpm-output.json";
-import reportPnpmNone from "./pnpm-none/pnpm-output.json";
-import reportPnpmSkipDevelopment from "./pnpm-skip-dev/pnpm-output.json";
+import reportPnpmAllowlistedPath from "./pnpm-allowlisted-path/pnpm-output.json" with { type: "json" };
+import reportPnpmCritical from "./pnpm-critical/pnpm-output.json" with { type: "json" };
+import reportPnpmHighSeverity from "./pnpm-high/pnpm-output.json" with { type: "json" };
+import reportPnpmLow from "./pnpm-low/pnpm-output.json" with { type: "json" };
+import reportPnpmModerateSeverity from "./pnpm-moderate/pnpm-output.json" with { type: "json" };
+import reportPnpmNone from "./pnpm-none/pnpm-output.json" with { type: "json" };
+import reportPnpmSkipDevelopment from "./pnpm-skip-dev/pnpm-output.json" with { type: "json" };
 
 function config(
   additions: Omit<Parameters<typeof baseConfig>[0], "package-manager">,
@@ -122,13 +122,7 @@ describe("pnpm-auditor", () => {
       config({
         directory: testDirectory("pnpm-moderate"),
         levels: { moderate: true },
-        allowlist: new Allowlist([
-          {
-            "GHSA-rvg8-pwq2-xj7q": {
-              active: true,
-            },
-          },
-        ]),
+        allowlist: new Allowlist([{ "GHSA-rvg8-pwq2-xj7q": { active: true } }]),
       }),
       (_summary) => _summary,
     );
@@ -165,11 +159,7 @@ describe("pnpm-auditor", () => {
         levels: { moderate: true },
         allowlist: new Allowlist([
           "GHSA-cff4-rrq6-h78w",
-          {
-            "GHSA-rvg8-pwq2-xj7q": {
-              active: false,
-            },
-          },
+          { "GHSA-rvg8-pwq2-xj7q": { active: false } },
         ]),
       }),
       (_summary) => _summary,
@@ -319,10 +309,7 @@ describe("pnpm-auditor", () => {
   it("reports low severity", () => {
     const summary = report(
       reportPnpmLow,
-      config({
-        directory: testDirectory("pnpm-low"),
-        levels: { low: true },
-      }),
+      config({ directory: testDirectory("pnpm-low"), levels: { low: true } }),
       (_summary) => _summary,
     );
     expect(summary).to.eql(
@@ -336,10 +323,7 @@ describe("pnpm-auditor", () => {
   it("passes with no vulnerabilities", () => {
     const summary = report(
       reportPnpmNone,
-      config({
-        directory: testDirectory("pnpm-none"),
-        levels: { low: true },
-      }),
+      config({ directory: testDirectory("pnpm-none"), levels: { low: true } }),
       (_summary) => _summary,
     );
     expect(summary).to.eql(summaryWithDefault());
@@ -356,26 +340,4 @@ describe("pnpm-auditor", () => {
     );
     expect(summary).to.eql(summaryWithDefault());
   });
-  // it("fails errors with code ENOAUDIT on a valid site with no audit", (done) => {
-  //   audit(
-  //     config({
-  //       directory: testDirectory("pnpm-low"),
-  //       levels: { low: true },
-  //       registry: "https://example.com",
-  //     })
-  //   ).catch((err) => {
-  //     expect(err.message).to.include("code ENOAUDIT");
-  //     done();
-  //   });
-  // });
-  // it("passes using --pass-enoaudit", () => {
-  //   const directory = testDirectory("pnpm-500");
-  //   return audit(
-  //     config({
-  //       directory,
-  //       "pass-enoaudit": true,
-  //       _pnpm: path.join(directory, "pnpm"),
-  //     })
-  //   );
-  // });
 });

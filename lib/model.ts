@@ -179,9 +179,7 @@ class Model {
     if ("vulnerabilities" in parsedOutput && parsedOutput.vulnerabilities) {
       const advisoryMap = new Map<
         number,
-        ProcessedAdvisory & {
-          findingsSet: Set<string>;
-        }
+        ProcessedAdvisory & { findingsSet: Set<string> }
       >();
       // First, let's deal with building a structure that's as close to NPM 6 as we can
       // without dealing with the findings.
@@ -276,7 +274,6 @@ class Model {
         )
           .map((via) => via.source)
           // Filter boolean makes the next line non-nullable.
-          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
           .map((id) => advisoryMap.get(id)!)
           .filter(Boolean);
         for (const advisory of advisories) {

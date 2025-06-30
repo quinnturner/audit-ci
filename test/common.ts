@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 import Allowlist from "../lib/allowlist.js";
 import { AuditCiFullConfig } from "../lib/config.js";
 import { mapVulnerabilityLevelInput } from "../lib/map-vulnerability.js";
@@ -25,12 +25,7 @@ export function config(
   } & Required<Pick<AuditCiFullConfig, "package-manager">>,
 ): AuditCiFullConfig {
   const defaultConfig = {
-    levels: {
-      low: false,
-      moderate: false,
-      high: false,
-      critical: false,
-    },
+    levels: { low: false, moderate: false, high: false, critical: false },
     "report-type": "important",
     allowlist: new Allowlist(),
     "show-not-found": false,

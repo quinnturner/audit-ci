@@ -7,20 +7,20 @@ import {
   summaryWithDefault,
   testDirectory,
 } from "./common.js";
-// import untypedReportYarn2Critical from "./yarn-2-critical/output.json";
-// import untypedReportYarn2High from "./yarn-2-high/output.json";
-// import untypedReportYarn2Low from "./yarn-2-low/output.json";
-// import untypedReportYarn2Moderate from "./yarn-2-moderate/output.json";
-// import untypedReportYarn2SkipDevelopment from "./yarn-2-skip-dev/output.json";
-// import untypedReportYarn2Workspace from "./yarn-2-workspace/output.json";
-// import untypedReportYarn2WorkspaceEmpty from "./yarn-2-workspace-empty/output.json";
-// import untypedReportYarn3Critical from "./yarn-3-critical/output.json";
-// import untypedReportYarn3High from "./yarn-3-high/output.json";
-// import untypedReportYarn3Low from "./yarn-3-low/output.json";
-// import untypedReportYarn3Moderate from "./yarn-3-moderate/output.json";
-// import untypedReportYarn3SkipDevelopment from "./yarn-3-skip-dev/output.json";
-// import untypedReportYarn3Workspace from "./yarn-3-workspace/output.json";
-// import untypedReportYarn3WorkspaceEmpty from "./yarn-3-workspace-empty/output.json";
+// import untypedReportYarn2Critical from "./yarn-2-critical/output.json" with { type: 'json'};
+// import untypedReportYarn2High from "./yarn-2-high/output.json" with { type: 'json'};
+// import untypedReportYarn2Low from "./yarn-2-low/output.json" with { type: 'json'};
+// import untypedReportYarn2Moderate from "./yarn-2-moderate/output.json" with { type: 'json'};
+// import untypedReportYarn2SkipDevelopment from "./yarn-2-skip-dev/output.json" with { type: 'json'};
+// import untypedReportYarn2Workspace from "./yarn-2-workspace/output.json" with { type: 'json'};
+// import untypedReportYarn2WorkspaceEmpty from "./yarn-2-workspace-empty/output.json" with { type: 'json'};
+// import untypedReportYarn3Critical from "./yarn-3-critical/output.json" with { type: 'json'};
+// import untypedReportYarn3High from "./yarn-3-high/output.json" with { type: 'json'};
+// import untypedReportYarn3Low from "./yarn-3-low/output.json" with { type: 'json'};
+// import untypedReportYarn3Moderate from "./yarn-3-moderate/output.json" with { type: 'json'};
+// import untypedReportYarn3SkipDevelopment from "./yarn-3-skip-dev/output.json" with { type: 'json'};
+// import untypedReportYarn3Workspace from "./yarn-3-workspace/output.json" with { type: 'json'};
+// import untypedReportYarn3WorkspaceEmpty from "./yarn-3-workspace-empty/output.json" with { type: 'json'};
 
 // const reportYarn2Critical =
 //   untypedReportYarn2Critical as Yarn2And3AuditReport.AuditResponse;
@@ -177,11 +177,7 @@ export function performAuditTests({
             directory: testDirectory(`yarn-${majorVersion}-moderate`),
             levels: { moderate: true },
             allowlist: new Allowlist([
-              {
-                "GHSA-rvg8-pwq2-xj7q": {
-                  active: true,
-                },
-              },
+              { "GHSA-rvg8-pwq2-xj7q": { active: true } },
             ]),
           }),
           (_summary) => _summary,
@@ -217,11 +213,7 @@ export function performAuditTests({
             levels: { moderate: true },
             allowlist: new Allowlist([
               "GHSA-cff4-rrq6-h78w",
-              {
-                "GHSA-rvg8-pwq2-xj7q": {
-                  active: false,
-                },
-              },
+              { "GHSA-rvg8-pwq2-xj7q": { active: false } },
             ]),
           }),
           (_summary) => _summary,
@@ -319,8 +311,6 @@ export function performAuditTests({
           (_summary) => _summary,
         ));
     },
-    {
-      timeout: 10_000,
-    },
+    { timeout: 10_000 },
   );
 }
