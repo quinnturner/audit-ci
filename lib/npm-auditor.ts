@@ -168,11 +168,11 @@ export async function auditWithFullConfig(
   reporter = reportAudit,
 ) {
   const parsedOutput = await runNpmAudit(config);
-  if ("error" in parsedOutput) {
+  if ("message" in parsedOutput) {
+    throw new Error(parsedOutput.message);
+  } else if ("error" in parsedOutput) {
     const { code, summary } = parsedOutput.error;
     throw new Error(`code ${code}: ${summary}`);
-  } else if ("message" in parsedOutput) {
-    throw new Error(parsedOutput.message);
   }
   return report(parsedOutput, config, reporter);
 }
