@@ -1,15 +1,7 @@
-import type {
-  GitHubAdvisoryId,
-  NPMAuditReportV1,
-  NPMAuditReportV2,
-} from "audit-types";
+import type { GitHubAdvisoryId, NPMAuditReportV1, NPMAuditReportV2 } from "audit-types";
 import { blue } from "./colors.js";
 import { reportAudit, ReportConfig, runProgram } from "./common.js";
-import {
-  AuditCiConfig,
-  AuditCiFullConfig,
-  mapAuditCiConfigToAuditCiFullConfig,
-} from "./config.js";
+import { AuditCiConfig, AuditCiFullConfig, mapAuditCiConfigToAuditCiFullConfig } from "./config.js";
 import Model, { Summary } from "./model.js";
 
 async function runNpmAudit(
@@ -51,19 +43,14 @@ async function runNpmAudit(
   const options = { cwd: directory };
   await runProgram(npmExec, arguments_, options, outListener, errorListener);
   if (stderrBuffer.length > 0) {
-    throw new Error(
-      `Invocation of npm audit failed:\n${stderrBuffer.join("\n")}`,
-    );
+    throw new Error(`Invocation of npm audit failed:\n${stderrBuffer.join("\n")}`);
   }
   return stdoutBuffer;
 }
 export function isV2Audit(
   parsedOutput: NPMAuditReportV1.Audit | NPMAuditReportV2.Audit,
 ): parsedOutput is NPMAuditReportV2.Audit {
-  return (
-    "auditReportVersion" in parsedOutput &&
-    parsedOutput.auditReportVersion === 2
-  );
+  return "auditReportVersion" in parsedOutput && parsedOutput.auditReportVersion === 2;
 }
 
 function printReport(
@@ -87,15 +74,12 @@ function printReport(
       const relevantAdvisories = (() => {
         if (isV2Audit(parsedOutput)) {
           const advisories = parsedOutput.vulnerabilities;
-          const relevantAdvisoryLevels = Object.keys(advisories).filter(
-            (advisory) => {
-              const severity = advisories[advisory].severity;
-              return severity !== "info" && levels[severity];
-            },
-          );
+          const relevantAdvisoryLevels = Object.keys(advisories).filter((advisory) => {
+            const severity = advisories[advisory].severity;
+            return severity !== "info" && levels[severity];
+          });
 
-          const relevantAdvisories: Record<string, NPMAuditReportV2.Advisory> =
-          {};
+          const relevantAdvisories: Record<string, NPMAuditReportV2.Advisory> = {};
           for (const advisory of relevantAdvisoryLevels) {
             relevantAdvisories[advisory] = advisories[advisory];
           }
@@ -108,10 +92,7 @@ function printReport(
             return severity !== "info" && levels[severity];
           });
 
-          const relevantAdvisories: Record<
-            GitHubAdvisoryId,
-            NPMAuditReportV1.Advisory
-          > = {};
+          const relevantAdvisories: Record<GitHubAdvisoryId, NPMAuditReportV1.Advisory> = {};
           for (const advisory of relevantAdvisoryLevels) {
             relevantAdvisories[advisory] = advisories[advisory];
           }
@@ -147,11 +128,7 @@ export function report(
     audit: NPMAuditReportV1.Audit | NPMAuditReportV2.Audit,
   ) => Summary,
 ) {
-  const {
-    levels,
-    "report-type": reportType,
-    "output-format": outputFormat,
-  } = config;
+  const { levels, "report-type": reportType, "output-format": outputFormat } = config;
   printReport(parsedOutput, levels, reportType, outputFormat);
   const model = new Model(config);
   const summary = model.load(parsedOutput);
@@ -163,10 +140,7 @@ export function report(
  *
  * @returns Returns the audit report summary on resolve, `Error` on rejection.
  */
-export async function auditWithFullConfig(
-  config: AuditCiFullConfig,
-  reporter = reportAudit,
-) {
+export async function auditWithFullConfig(config: AuditCiFullConfig, reporter = reportAudit) {
   const parsedOutput = await runNpmAudit(config);
   if ("message" in parsedOutput) {
     throw new Error(parsedOutput.message);

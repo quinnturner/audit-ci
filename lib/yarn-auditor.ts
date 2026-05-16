@@ -27,10 +27,7 @@ const isClassicAuditAdvisory = (
   return type === "auditAdvisory";
 };
 
-const isClassicAuditSummary = (
-  data: unknown,
-  type: unknown,
-): data is YarnAudit.AuditSummary => {
+const isClassicAuditSummary = (data: unknown, type: unknown): data is YarnAudit.AuditSummary => {
   return type === "auditSummary";
 };
 
@@ -111,31 +108,31 @@ export async function auditWithFullConfig(
     case "important": {
       printAuditData = isYarnClassic
         ? // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-        ({ type, data }: any) => {
-          if (isClassicAuditAdvisory(data, type)) {
-            const severity = data.advisory.severity;
-            if (severity !== "info" && levels[severity]) {
+          ({ type, data }: any) => {
+            if (isClassicAuditAdvisory(data, type)) {
+              const severity = data.advisory.severity;
+              if (severity !== "info" && levels[severity]) {
+                printJson(data);
+              }
+            } else if (isClassicAuditSummary(data, type)) {
               printJson(data);
             }
-          } else if (isClassicAuditSummary(data, type)) {
-            printJson(data);
           }
-        }
         : ({ metadata }: { metadata: Yarn2And3AuditReport.AuditMetadata }) => {
-          printJson(metadata);
-        };
+            printJson(metadata);
+          };
       break;
     }
     case "summary": {
       printAuditData = isYarnClassic
         ? ({ type, data }: { type: unknown; data: unknown }) => {
-          if (isClassicAuditAdvisory(data, type)) {
-            printJson(data);
+            if (isClassicAuditAdvisory(data, type)) {
+              printJson(data);
+            }
           }
-        }
         : ({ metadata }: { metadata: Yarn2And3AuditReport.AuditMetadata }) => {
-          printJson(metadata);
-        };
+            printJson(metadata);
+          };
       break;
     }
     default: {
@@ -145,9 +142,7 @@ export async function auditWithFullConfig(
     }
   }
 
-  function outListener(
-    line: YarnAudit.AuditResponse | Yarn2And3AuditReport.AuditResponse,
-  ) {
+  function outListener(line: YarnAudit.AuditResponse | Yarn2And3AuditReport.AuditResponse) {
     try {
       if (isClassicGuard(line)) {
         const { type, data } = line;
@@ -167,9 +162,7 @@ export async function auditWithFullConfig(
         printAuditData(line);
 
         if ("advisories" in line) {
-          for (const advisory of Object.values<Yarn2And3AuditReport.Advisory>(
-            line.advisories,
-          )) {
+          for (const advisory of Object.values<Yarn2And3AuditReport.Advisory>(line.advisories)) {
             model.process(advisory);
           }
         }
@@ -193,28 +186,21 @@ export async function auditWithFullConfig(
   }
   const options = { cwd: directory };
   const arguments_ = isYarnClassic
-    ? [
-      "audit",
-      "--json",
-      ...(skipDevelopmentDependencies ? ["--groups", "dependencies"] : []),
-    ]
+    ? ["audit", "--json", ...(skipDevelopmentDependencies ? ["--groups", "dependencies"] : [])]
     : [
-      "npm",
-      "audit",
-      "--recursive",
-      "--json",
-      "--all",
-      ...(skipDevelopmentDependencies ? ["--environment", "production"] : []),
-    ];
+        "npm",
+        "audit",
+        "--recursive",
+        "--json",
+        "--all",
+        ...(skipDevelopmentDependencies ? ["--environment", "production"] : []),
+      ];
   if (registry) {
     const auditRegistrySupported = yarnAuditSupportsRegistry(yarnVersion);
     if (auditRegistrySupported) {
       arguments_.push("--registry", registry);
     } else {
-      console.warn(
-        yellow,
-        "Yarn audit does not support the registry flag yet.",
-      );
+      console.warn(yellow, "Yarn audit does not support the registry flag yet.");
     }
   }
   if (extraArguments) {

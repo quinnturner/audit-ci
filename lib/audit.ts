@@ -55,9 +55,7 @@ async function audit(
       return result;
     } catch (error: unknown) {
       const message =
-        error && typeof error === "object" && "message" in error
-          ? error.message
-          : error;
+        error && typeof error === "object" && "message" in error ? error.message : error;
       const isRetryableMessage =
         typeof message === "string" &&
         PARTIAL_RETRY_ERROR_MSG[packageManager].some((retryErrorMessage) =>

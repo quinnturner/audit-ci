@@ -3,11 +3,7 @@ import { lt } from "semver";
 import { describe, expect, it } from "vitest";
 import Allowlist from "../lib/allowlist.js";
 import { auditWithFullConfig, report } from "../lib/npm-auditor.js";
-import {
-  config as baseConfig,
-  summaryWithDefault,
-  testDirectory,
-} from "./common.js";
+import { config as baseConfig, summaryWithDefault, testDirectory } from "./common.js";
 
 import untypedReportNpmAllowlistedPath from "./npm-allowlisted-path/npm7-output.json" with { type: "json" };
 import untypedReportNpmCritical from "./npm-critical/npm7-output.json" with { type: "json" };
@@ -19,10 +15,8 @@ import untypedReportNpmSkipDevelopment from "./npm-skip-dev/npm-output.json" wit
 
 const reportNpmAllowlistedPath =
   untypedReportNpmAllowlistedPath as unknown as NPMAuditReportV2.Audit;
-const reportNpmCritical =
-  untypedReportNpmCritical as unknown as NPMAuditReportV2.Audit;
-const reportNpmHighSeverity =
-  untypedReportNpmHighSeverity as unknown as NPMAuditReportV2.Audit;
+const reportNpmCritical = untypedReportNpmCritical as unknown as NPMAuditReportV2.Audit;
+const reportNpmHighSeverity = untypedReportNpmHighSeverity as unknown as NPMAuditReportV2.Audit;
 const reportNpmLow = untypedReportNpmLow as unknown as NPMAuditReportV2.Audit;
 const reportNpmModerateSeverity =
   untypedReportNpmModerateSeverity as unknown as NPMAuditReportV2.Audit;
@@ -32,9 +26,7 @@ const reportNpmSkipDevelopment =
 
 const nodeVersion = process.version;
 
-function config(
-  additions: Omit<Parameters<typeof baseConfig>[0], "package-manager">,
-) {
+function config(additions: Omit<Parameters<typeof baseConfig>[0], "package-manager">) {
   return baseConfig({ ...additions, "package-manager": "npm" });
 }
 
@@ -256,11 +248,7 @@ describe("npm7-auditor", () => {
     );
     expect(summary).to.eql(
       summaryWithDefault({
-        advisoriesFound: [
-          "GHSA-4w2v-q235-vp99",
-          "GHSA-74fj-2j2h-c42q",
-          "GHSA-cph5-m8f7-6c5x",
-        ],
+        advisoriesFound: ["GHSA-4w2v-q235-vp99", "GHSA-74fj-2j2h-c42q", "GHSA-cph5-m8f7-6c5x"],
         failedLevelsFound: ["high"],
         allowlistedPathsFound: [
           "GHSA-42xw-2xvc-qx8m|axios",

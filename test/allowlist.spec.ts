@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import Allowlist, {
-  dedupeAllowlistRecords,
-  normalizeAllowlistRecord,
-} from "../lib/allowlist.js";
+import Allowlist, { dedupeAllowlistRecords, normalizeAllowlistRecord } from "../lib/allowlist.js";
 
 describe("Allowlist", () => {
   it("can map config to empty Allowlist", () => {
@@ -135,8 +132,6 @@ describe("dedupeAllowlistRecords", () => {
       { abc: { active: true, notes: "I AM SECOND" } },
     ]);
 
-    expect(records).toEqual([
-      { abc: { active: true, notes: undefined, expiry: undefined } },
-    ]);
+    expect(records).toEqual([{ abc: { active: true, notes: undefined, expiry: undefined } }]);
   });
 });

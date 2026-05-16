@@ -2,11 +2,7 @@ import semver, { SemVer } from "semver";
 import { describe, expect, it as unskippableIt } from "vitest";
 import Allowlist from "../lib/allowlist.js";
 import audit from "../lib/audit.js";
-import {
-  config as baseConfig,
-  summaryWithDefault,
-  testDirectory,
-} from "./common.js";
+import { config as baseConfig, summaryWithDefault, testDirectory } from "./common.js";
 // import untypedReportYarn2Critical from "./yarn-2-critical/output.json" with { type: 'json'};
 // import untypedReportYarn2High from "./yarn-2-high/output.json" with { type: 'json'};
 // import untypedReportYarn2Low from "./yarn-2-low/output.json" with { type: 'json'};
@@ -60,23 +56,17 @@ export interface PerformAuditTests {
   yarnVersion: SemVer;
 }
 
-export function performAuditTests({
-  yarnAbsolutePath,
-  yarnVersion,
-}: PerformAuditTests) {
+export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAuditTests) {
   const { major: majorVersion } = yarnVersion;
 
-  const config = (
-    additions: Omit<Parameters<typeof baseConfig>[0], "package-manager">,
-  ) =>
+  const config = (additions: Omit<Parameters<typeof baseConfig>[0], "package-manager">) =>
     baseConfig({
       ...additions,
       "package-manager": "yarn",
       _yarn: yarnAbsolutePath,
     });
 
-  const it =
-    !canRunYarnBerry && majorVersion > 1 ? unskippableIt.skip : unskippableIt;
+  const it = !canRunYarnBerry && majorVersion > 1 ? unskippableIt.skip : unskippableIt;
 
   // To modify what slow times are, need to use
   // function() {} instead of () => {}
@@ -176,9 +166,7 @@ export function performAuditTests({
           config({
             directory: testDirectory(`yarn-${majorVersion}-moderate`),
             levels: { moderate: true },
-            allowlist: new Allowlist([
-              { "GHSA-rvg8-pwq2-xj7q": { active: true } },
-            ]),
+            allowlist: new Allowlist([{ "GHSA-rvg8-pwq2-xj7q": { active: true } }]),
           }),
           (_summary) => _summary,
         );

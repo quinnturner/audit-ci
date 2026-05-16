@@ -2,11 +2,7 @@ import { NPMAuditReportV1 } from "audit-types";
 import { describe, expect, it } from "vitest";
 import Allowlist from "../lib/allowlist.js";
 import { auditWithFullConfig, report } from "../lib/npm-auditor.js";
-import {
-  config as baseConfig,
-  summaryWithDefault,
-  testDirectory,
-} from "./common.js";
+import { config as baseConfig, summaryWithDefault, testDirectory } from "./common.js";
 
 import untypedReportNpmAllowlistedPath from "./npm-allowlisted-path/npm-output.json" with { type: "json" };
 import untypedReportNpmCritical from "./npm-critical/npm-output.json" with { type: "json" };
@@ -16,21 +12,15 @@ import untypedReportNpmModerateSeverity from "./npm-moderate/npm-output.json" wi
 import untypedReportNpmNone from "./npm-none/npm-output.json" with { type: "json" };
 import untypedReportNpmSkipDevelopment from "./npm-skip-dev/npm-output.json" with { type: "json" };
 
-const reportNpmAllowlistedPath =
-  untypedReportNpmAllowlistedPath as NPMAuditReportV1.Audit;
+const reportNpmAllowlistedPath = untypedReportNpmAllowlistedPath as NPMAuditReportV1.Audit;
 const reportNpmCritical = untypedReportNpmCritical as NPMAuditReportV1.Audit;
-const reportNpmHighSeverity =
-  untypedReportNpmHighSeverity as NPMAuditReportV1.Audit;
+const reportNpmHighSeverity = untypedReportNpmHighSeverity as NPMAuditReportV1.Audit;
 const reportNpmLow = untypedReportNpmLow as NPMAuditReportV1.Audit;
-const reportNpmModerateSeverity =
-  untypedReportNpmModerateSeverity as NPMAuditReportV1.Audit;
+const reportNpmModerateSeverity = untypedReportNpmModerateSeverity as NPMAuditReportV1.Audit;
 const reportNpmNone = untypedReportNpmNone as NPMAuditReportV1.Audit;
-const reportNpmSkipDevelopment =
-  untypedReportNpmSkipDevelopment as NPMAuditReportV1.Audit;
+const reportNpmSkipDevelopment = untypedReportNpmSkipDevelopment as NPMAuditReportV1.Audit;
 
-function config(
-  additions: Omit<Parameters<typeof baseConfig>[0], "package-manager">,
-) {
+function config(additions: Omit<Parameters<typeof baseConfig>[0], "package-manager">) {
   return baseConfig({ ...additions, "package-manager": "npm" });
 }
 
@@ -254,11 +244,7 @@ describe("npm-auditor", () => {
     );
     expect(summary).to.eql(
       summaryWithDefault({
-        advisoriesFound: [
-          "GHSA-4w2v-q235-vp99",
-          "GHSA-74fj-2j2h-c42q",
-          "GHSA-cph5-m8f7-6c5x",
-        ],
+        advisoriesFound: ["GHSA-4w2v-q235-vp99", "GHSA-74fj-2j2h-c42q", "GHSA-cph5-m8f7-6c5x"],
         failedLevelsFound: ["high"],
         allowlistedPathsFound: [
           "GHSA-42xw-2xvc-qx8m|axios",
