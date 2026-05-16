@@ -23,6 +23,18 @@ function mapReportTypeInput(config: Pick<AuditCiPreprocessedConfig, "report-type
   }
 }
 
+function resolveReportType(
+  config: Pick<AuditCiPreprocessedConfig, "report-type" | "report" | "summary">,
+) {
+  if (config.report) {
+    return "full" as const;
+  }
+  if (config.summary) {
+    return "summary" as const;
+  }
+  return mapReportTypeInput(config);
+}
+
 function mapExtraArgumentsInput(config: Pick<AuditCiPreprocessedConfig, "extra-args">) {
   // These args will often be flags for another command, so we
   // want to have some way of escaping args that start with a -.
@@ -268,7 +280,7 @@ export function mapArgvToAuditCiConfig(argv: AuditCiPreprocessedConfig) {
     ...argv,
     "package-manager": resolvedPackageManager,
     levels: mapVulnerabilityLevelInput({ low, moderate, high, critical }),
-    "report-type": mapReportTypeInput(argv),
+    "report-type": resolveReportType(argv),
     allowlist: allowlist,
     "extra-args": mapExtraArgumentsInput(argv),
   };
@@ -300,7 +312,11 @@ export function mapAuditCiConfigToAuditCiFullConfig(
     "skip-dev": config["skip-dev"] ?? defaults["skip-dev"],
     "pass-enoaudit": config["pass-enoaudit"] ?? defaults["pass-enoaudit"],
     "retry-count": config["retry-count"] ?? defaults["retry-count"],
-    "report-type": config["report-type"] ?? defaults["report-type"],
+    "report-type": resolveReportType({
+      "report-type": config["report-type"] ?? defaults["report-type"],
+      report: config.report ?? defaults.report,
+      summary: config.summary ?? defaults.summary,
+    }),
     "package-manager": resolvedPackageManager,
     directory,
     report: config.report ?? defaults.report,
