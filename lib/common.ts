@@ -135,9 +135,9 @@ export function runProgram(
   command: string,
   arguments_: readonly string[],
   options: SpawnOptionsWithoutStdio,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   stdoutListener: (data: any) => void,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   stderrListener: (data: any) => void,
 ) {
   const transform = new ReadlineTransform({ skipEmpty: true });

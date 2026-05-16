@@ -99,7 +99,7 @@ export async function auditWithFullConfig(
   }
 
   // Define a function to print based on the report type.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   let printAuditData: any;
   switch (reportType) {
     case "full": {
@@ -110,32 +110,32 @@ export async function auditWithFullConfig(
     }
     case "important": {
       printAuditData = isYarnClassic
-        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ({ type, data }: any) => {
-            if (isClassicAuditAdvisory(data, type)) {
-              const severity = data.advisory.severity;
-              if (severity !== "info" && levels[severity]) {
-                printJson(data);
-              }
-            } else if (isClassicAuditSummary(data, type)) {
+        ? // oxlint-disable-next-line @typescript-eslint/no-explicit-any
+        ({ type, data }: any) => {
+          if (isClassicAuditAdvisory(data, type)) {
+            const severity = data.advisory.severity;
+            if (severity !== "info" && levels[severity]) {
               printJson(data);
             }
+          } else if (isClassicAuditSummary(data, type)) {
+            printJson(data);
           }
+        }
         : ({ metadata }: { metadata: Yarn2And3AuditReport.AuditMetadata }) => {
-            printJson(metadata);
-          };
+          printJson(metadata);
+        };
       break;
     }
     case "summary": {
       printAuditData = isYarnClassic
         ? ({ type, data }: { type: unknown; data: unknown }) => {
-            if (isClassicAuditAdvisory(data, type)) {
-              printJson(data);
-            }
+          if (isClassicAuditAdvisory(data, type)) {
+            printJson(data);
           }
+        }
         : ({ metadata }: { metadata: Yarn2And3AuditReport.AuditMetadata }) => {
-            printJson(metadata);
-          };
+          printJson(metadata);
+        };
       break;
     }
     default: {
@@ -181,9 +181,9 @@ export async function auditWithFullConfig(
     }
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const stderrBuffer: any[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   function errorListener(line: any) {
     stderrBuffer.push(line);
 
@@ -194,18 +194,18 @@ export async function auditWithFullConfig(
   const options = { cwd: directory };
   const arguments_ = isYarnClassic
     ? [
-        "audit",
-        "--json",
-        ...(skipDevelopmentDependencies ? ["--groups", "dependencies"] : []),
-      ]
+      "audit",
+      "--json",
+      ...(skipDevelopmentDependencies ? ["--groups", "dependencies"] : []),
+    ]
     : [
-        "npm",
-        "audit",
-        "--recursive",
-        "--json",
-        "--all",
-        ...(skipDevelopmentDependencies ? ["--environment", "production"] : []),
-      ];
+      "npm",
+      "audit",
+      "--recursive",
+      "--json",
+      "--all",
+      ...(skipDevelopmentDependencies ? ["--environment", "production"] : []),
+    ];
   if (registry) {
     const auditRegistrySupported = yarnAuditSupportsRegistry(yarnVersion);
     if (auditRegistrySupported) {

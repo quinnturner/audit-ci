@@ -24,7 +24,7 @@ async function runPnpmAudit(
   } = config;
   const pnpmExec = _pnpm || "pnpm";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const stdoutBuffer: any = {};
   function outListener(data: unknown) {
     // Object.assign is used here instead of the spread operator for minor performance gains.

@@ -24,16 +24,16 @@ async function runNpmAudit(
   } = config;
   const npmExec = _npm || "npm";
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   let stdoutBuffer: any = {};
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   function outListener(data: any) {
     stdoutBuffer = { ...stdoutBuffer, ...data };
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   const stderrBuffer: any[] = [];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   function errorListener(line: any) {
     stderrBuffer.push(line);
   }
@@ -95,7 +95,7 @@ function printReport(
           );
 
           const relevantAdvisories: Record<string, NPMAuditReportV2.Advisory> =
-            {};
+          {};
           for (const advisory of relevantAdvisoryLevels) {
             relevantAdvisories[advisory] = advisories[advisory];
           }

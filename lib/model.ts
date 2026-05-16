@@ -59,7 +59,7 @@ interface PartialNPMAuditReportV2Audit {
     Record<
       string,
       Pick<NPMAuditReportV2.Advisory, "name" | "isDirect" | "via" | "effects"> &
-        Partial<NPMAuditReportV2.Advisory>
+      Partial<NPMAuditReportV2.Advisory>
     >
   >;
 }
@@ -295,7 +295,7 @@ class Model {
   }
 
   getSummary(
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // oxlint-disable-next-line @typescript-eslint/no-explicit-any
     advisoryMapper: (advisory: any) => GitHubAdvisoryId = (a) =>
       a.github_advisory_id,
   ) {

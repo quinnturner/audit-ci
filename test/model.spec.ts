@@ -4,7 +4,7 @@ import Allowlist from "../lib/allowlist.js";
 import Model from "../lib/model.js";
 import { summaryWithDefault } from "./common.js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Intentionally any to pass bad values
+// oxlint-disable-next-line @typescript-eslint/no-explicit-any -- Intentionally any to pass bad values
 function config(additions: any) {
   return { ...additions };
 }
