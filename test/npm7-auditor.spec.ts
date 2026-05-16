@@ -1,5 +1,4 @@
 import { NPMAuditReportV2 } from "audit-types";
-import { lt } from "semver";
 import { describe, expect, it } from "vitest";
 import Allowlist from "../lib/allowlist.js";
 import { auditWithFullConfig, report } from "../lib/npm-auditor.js";
@@ -23,8 +22,6 @@ const reportNpmModerateSeverity =
 const reportNpmNone = untypedReportNpmNone as unknown as NPMAuditReportV2.Audit;
 const reportNpmSkipDevelopment =
   untypedReportNpmSkipDevelopment as unknown as NPMAuditReportV2.Audit;
-
-const nodeVersion = process.version;
 
 function config(additions: Omit<Parameters<typeof baseConfig>[0], "package-manager">) {
   return baseConfig({ ...additions, "package-manager": "npm" });
@@ -369,22 +366,21 @@ describe("npm7-auditor", () => {
     }
     throw new Error("Expected audit to fail");
   });
-  lt(nodeVersion, "20.0.0") &&
-    it("fails with error code ECONNREFUSED on a live site with no registry", async () => {
-      try {
-        await auditWithFullConfig(
-          config({
-            directory: testDirectory("npm-low"),
-            levels: { low: true },
-            registry: "http://localhost",
-          }),
-        );
-      } catch (error) {
-        expect((error as Error).message).to.include("ECONNREFUSED");
-        return;
-      }
-      throw new Error("Expected audit to fail");
-    });
+  it("fails with error code ECONNREFUSED on a live site with no registry", async () => {
+    try {
+      await auditWithFullConfig(
+        config({
+          directory: testDirectory("npm-low"),
+          levels: { low: true },
+          registry: "http://localhost",
+        }),
+      );
+    } catch (error) {
+      expect((error as Error).message).to.include("ECONNREFUSED");
+      return;
+    }
+    throw new Error("Expected audit to fail");
+  });
   it("reports summary with no vulnerabilities when critical devDependency and skip-dev is true", () => {
     const summary = report(
       reportNpmSkipDevelopment,

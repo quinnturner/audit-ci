@@ -65,8 +65,8 @@ export async function auditWithFullConfig(
   const yarnName = isYarnClassic ? `Yarn` : `Yarn Berry`;
 
   function isClassicGuard(
-    response: YarnAudit.AuditResponse | Yarn2And3AuditReport.AuditResponse,
-  ): response is YarnAudit.AuditResponse {
+    _response: YarnAudit.AuditResponse | Yarn2And3AuditReport.AuditResponse,
+  ): _response is YarnAudit.AuditResponse {
     return isYarnClassic;
   }
 
