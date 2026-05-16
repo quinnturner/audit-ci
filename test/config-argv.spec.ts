@@ -46,6 +46,14 @@ describe("mapArgvToAuditCiConfig", () => {
     );
   });
 
+  it("maps -r/--report and -s/--summary to report-type", () => {
+    expect(mapArgvToAuditCiConfig(baseArgv({ report: true }))["report-type"]).toBe("full");
+    expect(mapArgvToAuditCiConfig(baseArgv({ summary: true }))["report-type"]).toBe("summary");
+    expect(
+      mapArgvToAuditCiConfig(baseArgv({ report: true, "report-type": "important" }))["report-type"],
+    ).toBe("full");
+  });
+
   it("throws for invalid report types from argv", () => {
     expect(() =>
       mapArgvToAuditCiConfig(
