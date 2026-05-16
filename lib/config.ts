@@ -15,8 +15,9 @@ function mapReportTypeInput(config: Pick<AuditCiPreprocessedConfig, "report-type
       return reportType;
     }
     default: {
+      reportType satisfies never;
       throw new Error(
-        `Invalid report type: ${reportType}. Should be \`['important', 'full', 'summary']\`.`,
+        `Invalid report type: ${reportType as string}. Should be \`['important', 'full', 'summary']\`.`,
       );
     }
   }
@@ -180,7 +181,8 @@ function resolvePackageManagerType(
       );
     }
     default: {
-      throw new Error(`Unexpected package manager argument: ${pmArgument}`);
+      pmArgument satisfies never;
+      throw new Error(`Unexpected package manager argument: ${pmArgument as string}`);
     }
   }
 }

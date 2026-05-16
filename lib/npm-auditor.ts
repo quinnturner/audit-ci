@@ -112,8 +112,9 @@ function printReport(
       break;
     }
     default: {
+      reportType satisfies never;
       throw new Error(
-        `Invalid report type: ${reportType}. Should be \`['important', 'full', 'summary']\`.`,
+        `Invalid report type: ${reportType as string}. Should be \`['important', 'full', 'summary']\`.`,
       );
     }
   }

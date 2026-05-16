@@ -32,7 +32,8 @@ function getAuditor(
       return pnpmAuditor;
     }
     default: {
-      throw new Error(`Invalid package manager: ${packageManager}`);
+      packageManager satisfies never;
+      throw new Error(`Invalid package manager: ${packageManager as string}`);
     }
   }
 }

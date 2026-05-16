@@ -138,10 +138,7 @@ class Model {
     /** NPM 6 & PNPM */
     if ("advisories" in parsedOutput && parsedOutput.advisories) {
       for (const advisory of Object.values<
-        DeepWriteable<
-          | PartialNPMAuditReportV1Audit["advisories"][GitHubAdvisoryId]
-          | PartialPNPMAuditReportAudit["advisories"][GitHubAdvisoryId]
-        >
+        DeepWriteable<PartialNPMAuditReportV1Audit["advisories"][GitHubAdvisoryId]>
       >(parsedOutput.advisories)) {
         advisory.github_advisory_id = gitHubAdvisoryUrlToAdvisoryId(advisory.url);
         // PNPM paths have a leading `.>`
@@ -270,7 +267,7 @@ class Model {
     advisoryMapper: (advisory: any) => GitHubAdvisoryId = (a) => a.github_advisory_id,
   ) {
     // Clean up the data structures for more consistent output.
-    this.advisoriesFound.sort();
+    this.advisoriesFound.sort((a, b) => a.github_advisory_id.localeCompare(b.github_advisory_id));
     this.advisoryPathsFound = [...new Set(this.advisoryPathsFound)].sort();
     this.allowlistedAdvisoriesFound.sort();
     this.allowlistedModulesFound.sort();
