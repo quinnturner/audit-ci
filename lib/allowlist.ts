@@ -24,11 +24,18 @@ const DEFAULT_NSP_CONTENT: Readonly<NSPContent> = {
  * @returns Normalized NSPRecord object.
  */
 export function normalizeAllowlistRecord(recordOrId: AllowlistRecord): NSPRecord {
-  return typeof recordOrId === "string"
-    ? {
-        [recordOrId]: DEFAULT_NSP_CONTENT,
-      }
-    : recordOrId;
+  if (typeof recordOrId === "string") {
+    return {
+      [recordOrId]: DEFAULT_NSP_CONTENT,
+    };
+  }
+  const id = getAllowlistId(recordOrId);
+  return {
+    [id]: {
+      ...DEFAULT_NSP_CONTENT,
+      ...recordOrId[id],
+    },
+  };
 }
 
 /**
