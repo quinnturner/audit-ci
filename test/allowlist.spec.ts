@@ -81,6 +81,15 @@ describe("normalizeAllowlistRecord", () => {
     });
   });
 
+  it("merges default active=true when omitted from NSPRecord", () => {
+    const record = normalizeAllowlistRecord({
+      myid: { notes: "allowed" },
+    });
+    expect(record).toEqual({
+      myid: { active: true, expiry: undefined, notes: "allowed" },
+    });
+  });
+
   it("should normalize NSPRecord by making no modifications", () => {
     const record = normalizeAllowlistRecord({
       myid: { active: true, expiry: undefined, notes: undefined },
