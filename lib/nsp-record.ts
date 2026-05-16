@@ -56,7 +56,7 @@ export function getNSPContent(nspRecord: NSPRecord | GitHubNSPRecord): NSPConten
  */
 export function isNSPRecordActive(nspRecord: NSPRecord, now = new Date()): boolean {
   const content = getNSPContent(nspRecord);
-  if (!content.active) {
+  if (content.active === false) {
     return false;
   }
 
