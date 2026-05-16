@@ -27,24 +27,20 @@
     "README.md"
   ],
   "type": "module",
-  "main": "./dist/index.cjs",
+  "main": "./dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "import": {
         "types": "./dist/index.d.ts",
         "default": "./dist/index.js"
-      },
-      "require": {
-        "types": "./dist/index.d.cts",
-        "default": "./dist/index.cjs"
       }
     },
     "./package.json": "./package.json"
   },
   "scripts": {
     "tsgo": "tsgo -p tsconfig.build.json",
-    "build": "concurrently \"tsgo -p tsconfig.build.json --noEmit\" \"tsup lib/index.ts lib/bin.ts\"",
+    "build": "rm -rf dist && tsgo -p tsconfig.build.json",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "format": "oxfmt --write",
@@ -77,11 +73,10 @@
     "@typescript/native-preview": "7.0.0-dev.20260513.1",
     "@vitest/coverage-v8": "^4.1.6",
     "audit-types": "^0.6.2",
-    "concurrently": "^9.2.1",
     "oxfmt": "^0.49.0",
     "oxlint": "^1.64.0",
+    "oxlint-tsgolint": "0.22.1",
     "ts-json-schema-generator": "^2.9.0",
-    "tsup": "^8.5.1",
     "vitest": "^4.1.6"
   },
   "engines": {
