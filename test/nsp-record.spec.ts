@@ -45,6 +45,14 @@ describe("isNSPRecordActive", () => {
     expect(active).to.eql(true);
   });
 
+  it("should be active when active is omitted", () => {
+    const active = isNSPRecordActive({
+      myid: {},
+    });
+
+    expect(active).to.eql(true);
+  });
+
   it("should not be active if active=false and there is no expiry", () => {
     const active = isNSPRecordActive({
       myid: {
