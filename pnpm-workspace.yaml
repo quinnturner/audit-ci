@@ -1,4 +1,2 @@
-allowBuilds:
-  esbuild: true
 # 3 days in minutes (4320)
 minimumReleaseAge: 4320

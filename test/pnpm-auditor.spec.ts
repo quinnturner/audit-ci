@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import Allowlist from "../lib/allowlist.js";
 import { report } from "../lib/pnpm-auditor.js";
 import { config as baseConfig, summaryWithDefault, testDirectory } from "./common.js";
@@ -318,6 +318,27 @@ describe("pnpm-auditor", () => {
     );
     expect(summary).to.eql(summaryWithDefault());
   });
+  it("prints summary output without a text header in json mode", () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      report(
+        reportPnpmHighSeverity,
+        config({
+          directory: testDirectory("pnpm-high"),
+          levels: { high: true },
+          "report-type": "summary",
+          "output-format": "json",
+        }),
+        (_summary) => _summary,
+      );
+      expect(logSpy).toHaveBeenCalledWith(
+        JSON.stringify(reportPnpmHighSeverity.metadata, undefined, 2),
+      );
+    } finally {
+      logSpy.mockRestore();
+    }
+  });
+
   it("reports summary with no vulnerabilities when critical devDependency and skip-dev is true", () => {
     const summary = report(
       reportPnpmSkipDevelopment,

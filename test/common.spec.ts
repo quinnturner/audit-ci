@@ -6,6 +6,7 @@ import {
   isGitHubAdvisoryId,
   matchString,
 } from "../lib/common.js";
+import { getErrorMessages } from "./common.js";
 
 describe("matchString", () => {
   it("works for various prefixes and suffixes of wildcards", () => {
@@ -43,6 +44,19 @@ describe("gitHubAdvisoryIdToUrl", () => {
 describe("deduplicate", () => {
   it("removes duplicates from an array", () => {
     expect(deduplicate(["1", "2", "2", "1", "2", "3", "1"])).toEqual(["1", "2", "3"]);
+  });
+});
+
+describe("getErrorMessages", () => {
+  it("returns a string for non-error values", () => {
+    expect(getErrorMessages("plain failure")).toBe("plain failure");
+  });
+
+  it("includes nested error causes", () => {
+    const error = new Error("request failed");
+    error.cause = new Error("ECONNREFUSED");
+    expect(getErrorMessages(error)).toContain("ECONNREFUSED");
+    expect(getErrorMessages(error)).toContain("request failed");
   });
 });
 

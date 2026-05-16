@@ -38,7 +38,9 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
   const reportYarn = (
     name: string,
     additions: Omit<Parameters<typeof baseConfig>[0], "package-manager">,
-    reporter: (summary: ReturnType<typeof summaryWithDefault>) => ReturnType<typeof summaryWithDefault>,
+    reporter: (
+      summary: ReturnType<typeof summaryWithDefault>,
+    ) => ReturnType<typeof summaryWithDefault>,
   ) => {
     const directory = yarnFixtureDirectory(name);
     const auditConfig = config({ ...additions, directory: testDirectory(directory) });

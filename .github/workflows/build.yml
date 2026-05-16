@@ -23,4 +23,4 @@ jobs:
       - run: node ./dist/bin.js --config ./audit-ci.jsonc
       - run: pnpm run coverage
       - run: pnpm run lint
-      - run: pnpm run format -- --check
+      - run: pnpm oxfmt --check

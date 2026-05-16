@@ -150,6 +150,55 @@ export type AuditCiConfig = {
   [K in keyof AuditCiConfigComplex]: AuditCiConfigComplex[K];
 };
 
+type SupportedPackageManager = "npm" | "yarn" | "pnpm";
+
+const PACKAGE_MANAGER_FIELD_PATTERN = /^(npm|yarn|pnpm)@/;
+
+function parsePackageManagerField(
+  packageManagerField: string,
+): SupportedPackageManager | undefined {
+  const match = PACKAGE_MANAGER_FIELD_PATTERN.exec(packageManagerField.trim());
+  return match ? (match[1] as SupportedPackageManager) : undefined;
+}
+
+function readPackageManagerFromPackageJson(directory: string): SupportedPackageManager | undefined {
+  const packageJsonPath = path.resolve(directory, "package.json");
+  if (!existsSync(packageJsonPath)) {
+    return undefined;
+  }
+
+  try {
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8")) as {
+      packageManager?: string;
+    };
+    if (typeof packageJson.packageManager !== "string") {
+      return undefined;
+    }
+    return parsePackageManagerField(packageJson.packageManager);
+  } catch {
+    return undefined;
+  }
+}
+
+function detectPackageManagerFromLockfiles(directory: string): SupportedPackageManager | undefined {
+  const getPath = (file: string) => path.resolve(directory, file);
+
+  if (existsSync(getPath("yarn.lock"))) {
+    return "yarn";
+  }
+  if (existsSync(getPath("pnpm-lock.yaml"))) {
+    return "pnpm";
+  }
+  if (existsSync(getPath("package-lock.json"))) {
+    return "npm";
+  }
+  if (existsSync(getPath("npm-shrinkwrap.json"))) {
+    return "npm";
+  }
+
+  return undefined;
+}
+
 /**
  * @param pmArgument the package manager (including the `auto` option)
  * @param directory the directory where the package manager files exist
@@ -158,7 +207,7 @@ export type AuditCiConfig = {
 function resolvePackageManagerType(
   pmArgument: "auto" | "npm" | "yarn" | "pnpm",
   directory: string,
-): "npm" | "yarn" | "pnpm" {
+): SupportedPackageManager {
   switch (pmArgument) {
     case "npm":
     case "pnpm":
@@ -166,18 +215,18 @@ function resolvePackageManagerType(
       return pmArgument;
     }
     case "auto": {
-      const getPath = (file: string) => path.resolve(directory, file);
-      // TODO: Consider prioritizing `package.json#packageManager` for determining the package manager.
-      const packageLockExists = existsSync(getPath("package-lock.json"));
-      if (packageLockExists) return "npm";
-      const shrinkwrapExists = existsSync(getPath("npm-shrinkwrap.json"));
-      if (shrinkwrapExists) return "npm";
-      const yarnLockExists = existsSync(getPath("yarn.lock"));
-      if (yarnLockExists) return "yarn";
-      const pnpmLockExists = existsSync(getPath("pnpm-lock.yaml"));
-      if (pnpmLockExists) return "pnpm";
+      const packageManagerFromManifest = readPackageManagerFromPackageJson(directory);
+      if (packageManagerFromManifest) {
+        return packageManagerFromManifest;
+      }
+
+      const packageManagerFromLockfiles = detectPackageManagerFromLockfiles(directory);
+      if (packageManagerFromLockfiles) {
+        return packageManagerFromLockfiles;
+      }
+
       throw new Error(
-        "Cannot establish package-manager type, missing package-lock.json, yarn.lock, and pnpm-lock.yaml.",
+        "Cannot establish package-manager type. Set package.json#packageManager or add yarn.lock, pnpm-lock.yaml, or package-lock.json.",
       );
     }
     default: {
@@ -208,7 +257,7 @@ const defaults = {
   "extra-args": [] as string[],
 };
 
-function mapArgvToAuditCiConfig(argv: AuditCiPreprocessedConfig) {
+export function mapArgvToAuditCiConfig(argv: AuditCiPreprocessedConfig) {
   const allowlist = Allowlist.mapConfigToAllowlist(argv);
 
   const { low, moderate, high, critical, "package-manager": packageManager, directory } = argv;
@@ -226,7 +275,11 @@ function mapArgvToAuditCiConfig(argv: AuditCiPreprocessedConfig) {
   return result;
 }
 
-export function mapAuditCiConfigToAuditCiFullConfig(config: AuditCiConfig): AuditCiFullConfig {
+export function mapAuditCiConfigToAuditCiFullConfig(
+  config: Omit<AuditCiConfig, "package-manager"> & {
+    ["package-manager"]?: "auto" | "npm" | "yarn" | "pnpm";
+  },
+): AuditCiFullConfig {
   const packageManager = config["package-manager"] ?? defaults["package-manager"];
   const directory = config.directory ?? defaults.directory;
 
@@ -259,6 +312,9 @@ export function mapAuditCiConfigToAuditCiFullConfig(config: AuditCiConfig): Audi
     allowlist,
     levels,
     "extra-args": config["extra-args"] ?? defaults["extra-args"],
+    _npm: config._npm,
+    _pnpm: config._pnpm,
+    _yarn: config._yarn,
   };
   return fullConfig;
 }

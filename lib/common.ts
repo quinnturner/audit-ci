@@ -117,7 +117,7 @@ function hasStatusCode(value: unknown): value is { statusCode: unknown; message:
 
 export function runProgram(
   command: string,
-  arguments_: readonly string[],
+  args: readonly string[],
   options: SpawnOptionsWithoutStdio,
   // oxlint-disable-next-line @typescript-eslint/no-explicit-any
   stdoutListener: (data: any) => void,
@@ -125,7 +125,7 @@ export function runProgram(
   stderrListener: (data: any) => void,
 ) {
   const transform = new ReadlineTransform({ skipEmpty: true });
-  const proc = spawn(command, arguments_, options);
+  const proc = spawn(command, args, options);
   let recentMessage: string;
   let errorMessage: string;
   proc.stdout.setEncoding("utf8");

@@ -1,5 +1,5 @@
 import { NPMAuditReportV1 } from "audit-types";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import Allowlist from "../lib/allowlist.js";
 import { auditWithFullConfig, report } from "../lib/npm-auditor.js";
 import { config as baseConfig, summaryWithDefault, testDirectory } from "./common.js";
@@ -365,6 +365,25 @@ describe("npm-auditor", () => {
     }
     throw new Error("Expected an error to be thrown");
   });
+  it("prints important npm v1 findings for enabled severities", () => {
+    const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    try {
+      report(
+        reportNpmModerateSeverity,
+        config({
+          directory: testDirectory("npm-moderate"),
+          levels: { moderate: true },
+          "report-type": "important",
+          "output-format": "text",
+        }),
+        (_summary) => _summary,
+      );
+      expect(logSpy).toHaveBeenCalled();
+    } finally {
+      logSpy.mockRestore();
+    }
+  });
+
   it("reports summary with no vulnerabilities when critical devDependency and skip-dev is true", () => {
     const summary = report(
       reportNpmSkipDevelopment,

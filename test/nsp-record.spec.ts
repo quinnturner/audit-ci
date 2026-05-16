@@ -13,6 +13,10 @@ describe("getAllowlistId", () => {
 });
 
 describe("getNSPContent", () => {
+  it("throws when the record is empty", () => {
+    expect(() => getNSPContent({})).toThrow("Empty NSPRecord is invalid");
+  });
+
   it("should get the content", () => {
     const content = getNSPContent({
       myid: {

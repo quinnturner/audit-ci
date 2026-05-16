@@ -382,9 +382,9 @@ describe("npm7-auditor", () => {
       );
     } catch (error) {
       const messages = getErrorMessages(error);
-      expect(
-        messages.includes("ECONNREFUSED") || messages.includes("http://localhost"),
-      ).to.equal(true);
+      expect(messages.includes("ECONNREFUSED") || messages.includes("http://localhost")).to.equal(
+        true,
+      );
       return;
     }
     throw new Error("Expected audit to fail");

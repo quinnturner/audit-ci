@@ -240,7 +240,9 @@ export async function auditWithFullConfig(
   function outListener(line: YarnAudit.AuditResponse | Yarn2And3AuditReport.AuditResponse) {
     try {
       if (isYarnClassic) {
-        if (processClassicAuditLine(line as YarnAudit.AuditResponse, model, printClassicAuditData)) {
+        if (
+          processClassicAuditLine(line as YarnAudit.AuditResponse, model, printClassicAuditData)
+        ) {
           missingLockFile = true;
         }
       } else {
