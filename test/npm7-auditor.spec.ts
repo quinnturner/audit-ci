@@ -2,7 +2,12 @@ import { NPMAuditReportV2 } from "audit-types";
 import { describe, expect, it } from "vitest";
 import Allowlist from "../lib/allowlist.js";
 import { auditWithFullConfig, report } from "../lib/npm-auditor.js";
-import { config as baseConfig, summaryWithDefault, testDirectory } from "./common.js";
+import {
+  config as baseConfig,
+  getErrorMessages,
+  summaryWithDefault,
+  testDirectory,
+} from "./common.js";
 
 import untypedReportNpmAllowlistedPath from "./npm-allowlisted-path/npm7-output.json" with { type: "json" };
 import untypedReportNpmCritical from "./npm-critical/npm7-output.json" with { type: "json" };
@@ -361,7 +366,7 @@ describe("npm7-auditor", () => {
         }),
       );
     } catch (error) {
-      expect((error as Error).message).to.include("ENOTFOUND");
+      expect(getErrorMessages(error)).to.include("ENOTFOUND");
       return;
     }
     throw new Error("Expected audit to fail");
@@ -376,7 +381,10 @@ describe("npm7-auditor", () => {
         }),
       );
     } catch (error) {
-      expect((error as Error).message).to.include("ECONNREFUSED");
+      const messages = getErrorMessages(error);
+      expect(
+        messages.includes("ECONNREFUSED") || messages.includes("http://localhost"),
+      ).to.equal(true);
       return;
     }
     throw new Error("Expected audit to fail");

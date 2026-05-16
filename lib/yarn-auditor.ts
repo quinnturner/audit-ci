@@ -1,6 +1,6 @@
 import type { YarnAudit, Yarn2And3AuditReport } from "audit-types";
 import { blue, red, yellow } from "./colors.js";
-import { reportAudit, runProgram } from "./common.js";
+import { type ReportConfig, reportAudit, runProgram } from "./common.js";
 import {
   mapAuditCiConfigToAuditCiFullConfig,
   type AuditCiConfig,
@@ -30,6 +30,176 @@ const isClassicAuditAdvisory = (
 const isClassicAuditSummary = (data: unknown, type: unknown): data is YarnAudit.AuditSummary => {
   return type === "auditSummary";
 };
+
+function printYarnHeader(
+  yarnName: string,
+  reportType: AuditCiFullConfig["report-type"],
+  outputFormat: AuditCiFullConfig["output-format"],
+) {
+  if (outputFormat !== "text") {
+    return;
+  }
+  switch (reportType) {
+    case "full": {
+      console.log(blue, `${yarnName} audit report JSON:`);
+      break;
+    }
+    case "important": {
+      console.log(blue, `${yarnName} audit report results:`);
+      break;
+    }
+    case "summary": {
+      console.log(blue, `${yarnName} audit report summary:`);
+      break;
+    }
+    default: {
+      reportType satisfies never;
+      throw new Error(
+        `Invalid report type: ${reportType as string}. Should be \`['important', 'full', 'summary']\`.`,
+      );
+    }
+  }
+}
+
+function createClassicPrintAuditData(
+  levels: AuditCiFullConfig["levels"],
+  reportType: AuditCiFullConfig["report-type"],
+): (line: YarnAudit.AuditResponse) => void {
+  switch (reportType) {
+    case "full": {
+      return (line) => {
+        printJson(line);
+      };
+    }
+    case "important": {
+      return ({ type, data }) => {
+        if (isClassicAuditAdvisory(data, type)) {
+          const severity = data.advisory.severity;
+          if (severity !== "info" && levels[severity]) {
+            printJson(data);
+          }
+        } else if (isClassicAuditSummary(data, type)) {
+          printJson(data);
+        }
+      };
+    }
+    case "summary": {
+      return ({ type, data }) => {
+        if (isClassicAuditAdvisory(data, type)) {
+          printJson(data);
+        }
+      };
+    }
+    default: {
+      reportType satisfies never;
+      throw new Error(
+        `Invalid report type: ${reportType as string}. Should be \`['important', 'full', 'summary']\`.`,
+      );
+    }
+  }
+}
+
+function createBerryPrintAuditData(
+  reportType: AuditCiFullConfig["report-type"],
+): (line: Yarn2And3AuditReport.AuditResponse) => void {
+  switch (reportType) {
+    case "full": {
+      return (line) => {
+        printJson(line);
+      };
+    }
+    case "important":
+    case "summary": {
+      return (line: Yarn2And3AuditReport.AuditResponse) => {
+        if ("metadata" in line) {
+          printJson(line.metadata);
+        }
+      };
+    }
+    default: {
+      reportType satisfies never;
+      throw new Error(
+        `Invalid report type: ${reportType as string}. Should be \`['important', 'full', 'summary']\`.`,
+      );
+    }
+  }
+}
+
+function processClassicAuditLine(
+  line: YarnAudit.AuditResponse,
+  model: Model,
+  printAuditData: (line: YarnAudit.AuditResponse) => void,
+): boolean {
+  const { type, data } = line;
+  printAuditData(line);
+
+  if (type === "info" && data === "No lockfile found.") {
+    return true;
+  }
+
+  if (type !== "auditAdvisory") {
+    return false;
+  }
+
+  model.process(data.advisory);
+  return false;
+}
+
+function processBerryAuditOutput(
+  line: Yarn2And3AuditReport.AuditResponse,
+  model: Model,
+  printAuditData: (line: Yarn2And3AuditReport.AuditResponse) => void,
+) {
+  printAuditData(line);
+
+  if ("advisories" in line) {
+    for (const advisory of Object.values<Yarn2And3AuditReport.Advisory>(line.advisories)) {
+      model.process(advisory);
+    }
+  }
+}
+
+export function reportClassic(
+  lines: readonly YarnAudit.AuditResponse[],
+  config: AuditCiFullConfig,
+  reporter: (summary: Summary, config: ReportConfig) => Summary = reportAudit,
+): Summary {
+  const { levels, "report-type": reportType, "output-format": outputFormat } = config;
+  printYarnHeader("Yarn", reportType, outputFormat);
+  const printAuditData = createClassicPrintAuditData(levels, reportType);
+  const model = new Model(config);
+  let missingLockFile = false;
+
+  for (const line of lines) {
+    if (processClassicAuditLine(line, model, printAuditData)) {
+      missingLockFile = true;
+    }
+  }
+
+  if (missingLockFile) {
+    console.warn(
+      yellow,
+      "No yarn.lock file. This does not affect auditing, but it may be a mistake.",
+    );
+  }
+
+  const summary = model.getSummary((a) => a.github_advisory_id);
+  return reporter(summary, config);
+}
+
+export function reportBerry(
+  parsedOutput: Yarn2And3AuditReport.AuditResponse,
+  config: AuditCiFullConfig,
+  reporter: (summary: Summary, config: ReportConfig) => Summary = reportAudit,
+): Summary {
+  const { "report-type": reportType, "output-format": outputFormat } = config;
+  printYarnHeader("Yarn Berry", reportType, outputFormat);
+  const printAuditData = createBerryPrintAuditData(reportType);
+  const model = new Model(config);
+  processBerryAuditOutput(parsedOutput, model, printAuditData);
+  const summary = model.getSummary((a) => a.github_advisory_id);
+  return reporter(summary, config);
+}
 
 /**
  * Audit your Yarn project!
@@ -63,111 +233,22 @@ export async function auditWithFullConfig(
   }
   const isYarnClassic = yarnSupportsClassicAudit(yarnVersion);
   const yarnName = isYarnClassic ? `Yarn` : `Yarn Berry`;
-
-  function isClassicGuard(
-    _response: YarnAudit.AuditResponse | Yarn2And3AuditReport.AuditResponse,
-  ): _response is YarnAudit.AuditResponse {
-    return isYarnClassic;
-  }
-
-  const printHeader = (text: string) => {
-    if (outputFormat === "text") {
-      console.log(blue, text);
-    }
-  };
-  switch (reportType) {
-    case "full": {
-      printHeader(`${yarnName} audit report JSON:`);
-      break;
-    }
-    case "important": {
-      printHeader(`${yarnName} audit report results:`);
-      break;
-    }
-    case "summary": {
-      printHeader(`${yarnName} audit report summary:`);
-      break;
-    }
-    default: {
-      reportType satisfies never;
-      throw new Error(
-        `Invalid report type: ${reportType as string}. Should be \`['important', 'full', 'summary']\`.`,
-      );
-    }
-  }
-
-  // Define a function to print based on the report type.
-  // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-  let printAuditData: any;
-  switch (reportType) {
-    case "full": {
-      printAuditData = (line: unknown) => {
-        printJson(line);
-      };
-      break;
-    }
-    case "important": {
-      printAuditData = isYarnClassic
-        ? // oxlint-disable-next-line @typescript-eslint/no-explicit-any
-          ({ type, data }: any) => {
-            if (isClassicAuditAdvisory(data, type)) {
-              const severity = data.advisory.severity;
-              if (severity !== "info" && levels[severity]) {
-                printJson(data);
-              }
-            } else if (isClassicAuditSummary(data, type)) {
-              printJson(data);
-            }
-          }
-        : ({ metadata }: { metadata: Yarn2And3AuditReport.AuditMetadata }) => {
-            printJson(metadata);
-          };
-      break;
-    }
-    case "summary": {
-      printAuditData = isYarnClassic
-        ? ({ type, data }: { type: unknown; data: unknown }) => {
-            if (isClassicAuditAdvisory(data, type)) {
-              printJson(data);
-            }
-          }
-        : ({ metadata }: { metadata: Yarn2And3AuditReport.AuditMetadata }) => {
-            printJson(metadata);
-          };
-      break;
-    }
-    default: {
-      reportType satisfies never;
-      throw new Error(
-        `Invalid report type: ${reportType as string}. Should be \`['important', 'full', 'summary']\`.`,
-      );
-    }
-  }
+  printYarnHeader(yarnName, reportType, outputFormat);
+  const printClassicAuditData = createClassicPrintAuditData(levels, reportType);
+  const printBerryAuditData = createBerryPrintAuditData(reportType);
 
   function outListener(line: YarnAudit.AuditResponse | Yarn2And3AuditReport.AuditResponse) {
     try {
-      if (isClassicGuard(line)) {
-        const { type, data } = line;
-        printAuditData(line);
-
-        if (type === "info" && data === "No lockfile found.") {
+      if (isYarnClassic) {
+        if (processClassicAuditLine(line as YarnAudit.AuditResponse, model, printClassicAuditData)) {
           missingLockFile = true;
-          return;
         }
-
-        if (type !== "auditAdvisory") {
-          return;
-        }
-
-        model.process(data.advisory);
       } else {
-        printAuditData(line);
-
-        if ("advisories" in line) {
-          for (const advisory of Object.values<Yarn2And3AuditReport.Advisory>(line.advisories)) {
-            model.process(advisory);
-          }
-        }
+        processBerryAuditOutput(
+          line as Yarn2And3AuditReport.AuditResponse,
+          model,
+          printBerryAuditData,
+        );
       }
     } catch (error) {
       console.error(red, `ERROR: Cannot JSONStream.parse response:`);

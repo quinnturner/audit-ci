@@ -1,51 +1,17 @@
 import semver, { SemVer } from "semver";
-import { describe, expect, it as unskippableIt } from "vitest";
+import { describe, expect, it as unskippableIt, vi } from "vitest";
 import Allowlist from "../lib/allowlist.js";
-import audit from "../lib/audit.js";
-import { config as baseConfig, summaryWithDefault, testDirectory } from "./common.js";
-// import untypedReportYarn2Critical from "./yarn-2-critical/output.json" with { type: 'json'};
-// import untypedReportYarn2High from "./yarn-2-high/output.json" with { type: 'json'};
-// import untypedReportYarn2Low from "./yarn-2-low/output.json" with { type: 'json'};
-// import untypedReportYarn2Moderate from "./yarn-2-moderate/output.json" with { type: 'json'};
-// import untypedReportYarn2SkipDevelopment from "./yarn-2-skip-dev/output.json" with { type: 'json'};
-// import untypedReportYarn2Workspace from "./yarn-2-workspace/output.json" with { type: 'json'};
-// import untypedReportYarn2WorkspaceEmpty from "./yarn-2-workspace-empty/output.json" with { type: 'json'};
-// import untypedReportYarn3Critical from "./yarn-3-critical/output.json" with { type: 'json'};
-// import untypedReportYarn3High from "./yarn-3-high/output.json" with { type: 'json'};
-// import untypedReportYarn3Low from "./yarn-3-low/output.json" with { type: 'json'};
-// import untypedReportYarn3Moderate from "./yarn-3-moderate/output.json" with { type: 'json'};
-// import untypedReportYarn3SkipDevelopment from "./yarn-3-skip-dev/output.json" with { type: 'json'};
-// import untypedReportYarn3Workspace from "./yarn-3-workspace/output.json" with { type: 'json'};
-// import untypedReportYarn3WorkspaceEmpty from "./yarn-3-workspace-empty/output.json" with { type: 'json'};
-
-// const reportYarn2Critical =
-//   untypedReportYarn2Critical as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn2High =
-//   untypedReportYarn2High as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn2Low =
-//   untypedReportYarn2Low as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn2Moderate =
-//   untypedReportYarn2Moderate as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn2SkipDevelopment =
-//   untypedReportYarn2SkipDevelopment as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn2Workspace =
-//   untypedReportYarn2Workspace as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn2WorkspaceEmpty =
-//   untypedReportYarn2WorkspaceEmpty as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn3Critical =
-//   untypedReportYarn3Critical as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn3High =
-//   untypedReportYarn3High as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn3Low =
-//   untypedReportYarn3Low as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn3Moderate =
-//   untypedReportYarn3Moderate as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn3SkipDevelopment =
-//   untypedReportYarn3SkipDevelopment as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn3Workspace =
-//   untypedReportYarn3Workspace as Yarn2And3AuditReport.AuditResponse;
-// const reportYarn3WorkspaceEmpty =
-//   untypedReportYarn3WorkspaceEmpty as Yarn2And3AuditReport.AuditResponse;
+import { yellow } from "../lib/colors.js";
+import * as common from "../lib/common.js";
+import { auditWithFullConfig, reportBerry, reportClassic } from "../lib/yarn-auditor.js";
+import { yarnAuditSupportsRegistry } from "../lib/yarn-version.js";
+import {
+  config as baseConfig,
+  readYarnBerryAuditOutput,
+  readYarnClassicAuditOutput,
+  summaryWithDefault,
+  testDirectory,
+} from "./common.js";
 
 const nodeVersion = process.version;
 
@@ -58,6 +24,7 @@ export interface PerformAuditTests {
 
 export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAuditTests) {
   const { major: majorVersion } = yarnVersion;
+  const isYarnClassic = majorVersion === 1;
 
   const config = (additions: Omit<Parameters<typeof baseConfig>[0], "package-manager">) =>
     baseConfig({
@@ -66,18 +33,33 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
       _yarn: yarnAbsolutePath,
     });
 
+  const yarnFixtureDirectory = (name: string) => `yarn-${majorVersion}-${name}`;
+
+  const reportYarn = (
+    name: string,
+    additions: Omit<Parameters<typeof baseConfig>[0], "package-manager">,
+    reporter: (summary: ReturnType<typeof summaryWithDefault>) => ReturnType<typeof summaryWithDefault>,
+  ) => {
+    const directory = yarnFixtureDirectory(name);
+    const auditConfig = config({ ...additions, directory: testDirectory(directory) });
+    if (isYarnClassic) {
+      return reportClassic(readYarnClassicAuditOutput(directory), auditConfig, reporter);
+    }
+    return reportBerry(readYarnBerryAuditOutput(directory), auditConfig, reporter);
+  };
+
   const it = !canRunYarnBerry && majorVersion > 1 ? unskippableIt.skip : unskippableIt;
 
   // To modify what slow times are, need to use
   // function() {} instead of () => {}
   describe(`yarn-${majorVersion}-auditor`, { timeout: 10_000 }, function testYarnAuditor() {
-    it("prints full report with critical severity", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-critical`),
+    it("prints full report with critical severity", () => {
+      const summary = reportYarn(
+        "critical",
+        {
           levels: { critical: true },
           "report-type": "full",
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(
@@ -88,23 +70,23 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
         }),
       );
     });
-    it("does not report critical severity if it set to false", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-critical`),
+    it("does not report critical severity if it set to false", () => {
+      const summary = reportYarn(
+        "critical",
+        {
           levels: { critical: false },
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(summaryWithDefault());
     });
-    it("reports summary with high severity", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-high`),
+    it("reports summary with high severity", () => {
+      const summary = reportYarn(
+        "high",
+        {
           levels: { high: true },
           "report-type": "summary",
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(
@@ -115,14 +97,14 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
         }),
       );
     });
-    it("reports important info with moderate severity", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-moderate`),
+    it("reports important info with moderate severity", () => {
+      const summary = reportYarn(
+        "moderate",
+        {
           allowlist: new Allowlist([]),
           levels: { moderate: true },
           "report-type": "important",
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(
@@ -134,23 +116,23 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
         }),
       );
     });
-    it("does not report moderate severity if it set to false", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-moderate`),
+    it("does not report moderate severity if it set to false", () => {
+      const summary = reportYarn(
+        "moderate",
+        {
           levels: { moderate: false },
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(summaryWithDefault());
     });
-    it("ignores an advisory if it is allowlisted", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-moderate`),
+    it("ignores an advisory if it is allowlisted", () => {
+      const summary = reportYarn(
+        "moderate",
+        {
           levels: { moderate: true },
           allowlist: new Allowlist(["GHSA-rvg8-pwq2-xj7q"]),
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(
@@ -159,13 +141,13 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
         }),
       );
     });
-    it("ignores an advisory if it is allowlisted using a NSPRecord", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-moderate`),
+    it("ignores an advisory if it is allowlisted using a NSPRecord", () => {
+      const summary = reportYarn(
+        "moderate",
+        {
           levels: { moderate: true },
           allowlist: new Allowlist([{ "GHSA-rvg8-pwq2-xj7q": { active: true } }]),
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(
@@ -174,13 +156,13 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
         }),
       );
     });
-    it("does not ignore an advisory that is not allowlisted", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-moderate`),
+    it("does not ignore an advisory that is not allowlisted", () => {
+      const summary = reportYarn(
+        "moderate",
+        {
           levels: { moderate: true },
           allowlist: new Allowlist(["GHSA-cff4-rrq6-h78w"]),
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(
@@ -192,16 +174,16 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
         }),
       );
     });
-    it("does not ignore an advisory that is not allowlisted using a NSPRecord", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-moderate`),
+    it("does not ignore an advisory that is not allowlisted using a NSPRecord", () => {
+      const summary = reportYarn(
+        "moderate",
+        {
           levels: { moderate: true },
           allowlist: new Allowlist([
             "GHSA-cff4-rrq6-h78w",
             { "GHSA-rvg8-pwq2-xj7q": { active: false } },
           ]),
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(
@@ -213,10 +195,10 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
         }),
       );
     });
-    it("ignores an advisory that has not expired", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-moderate`),
+    it("ignores an advisory that has not expired", () => {
+      const summary = reportYarn(
+        "moderate",
+        {
           levels: { moderate: true },
           allowlist: new Allowlist([
             {
@@ -226,7 +208,7 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
               },
             },
           ]),
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(
@@ -235,10 +217,10 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
         }),
       );
     });
-    it("does not ignore an advisory that has expired", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-moderate`),
+    it("does not ignore an advisory that has expired", () => {
+      const summary = reportYarn(
+        "moderate",
+        {
           levels: { moderate: true },
           allowlist: new Allowlist([
             "GHSA-cff4-rrq6-h78w",
@@ -249,7 +231,7 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
               },
             },
           ]),
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(
@@ -261,12 +243,12 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
         }),
       );
     });
-    it("reports low severity", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-low`),
+    it("reports low severity", () => {
+      const summary = reportYarn(
+        "low",
+        {
           levels: { low: true },
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(
@@ -277,24 +259,41 @@ export function performAuditTests({ yarnAbsolutePath, yarnVersion }: PerformAudi
         }),
       );
     });
-    it("passes with no vulnerabilities", async () => {
-      const summary = await audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-none`),
+    it("passes with no vulnerabilities", () => {
+      const summary = reportYarn(
+        "none",
+        {
           levels: { low: true },
-        }),
+        },
         (_summary) => _summary,
       );
       expect(summary).to.eql(summaryWithDefault());
     });
-    it("doesn't use the registry flag since it's not supported in Yarn yet", () =>
-      audit(
-        config({
-          directory: testDirectory(`yarn-${majorVersion}-low`),
-          levels: { low: true },
-          registry: "https://example.com",
-        }),
-        (_summary) => _summary,
-      ));
+    it("doesn't use the registry flag since it's not supported in Yarn yet", async () => {
+      expect(yarnAuditSupportsRegistry(yarnVersion)).toBe(false);
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const runProgramSpy = vi.spyOn(common, "runProgram").mockResolvedValue();
+      try {
+        await auditWithFullConfig(
+          config({
+            directory: testDirectory(yarnFixtureDirectory("low")),
+            levels: { low: true },
+            registry: "https://example.com",
+          }),
+          (_summary) => _summary,
+        );
+        expect(warnSpy).toHaveBeenCalledWith(
+          yellow,
+          "Yarn audit does not support the registry flag yet.",
+        );
+        const arguments_ = runProgramSpy.mock.calls[0]?.[1] as string[] | undefined;
+        expect(arguments_).toBeDefined();
+        expect(arguments_).not.toContain("--registry");
+        expect(arguments_).not.toContain("https://example.com");
+      } finally {
+        warnSpy.mockRestore();
+        runProgramSpy.mockRestore();
+      }
+    });
   });
 }
