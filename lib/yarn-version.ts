@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import semver from "semver";
 
 export const MINIMUM_YARN_CLASSIC_VERSION = "1.12.3";
@@ -31,7 +31,7 @@ export function getYarnVersion(yarnExec = "yarn", cwd?: string) {
   const key = `${yarnExec}:${cwd}`;
   let version = versionMap.get(key);
   if (version) return version;
-  version = execSync(`${yarnExec} -v`, { cwd }).toString().replace("\n", "");
+  version = execFileSync(yarnExec, ["-v"], { cwd }).toString().replace("\n", "");
   versionMap.set(key, version);
   return version;
 }
