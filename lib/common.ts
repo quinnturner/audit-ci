@@ -201,7 +201,15 @@ export function isGitHubAdvisoryId(id: unknown): id is GitHubAdvisoryId {
 }
 
 export function gitHubAdvisoryUrlToAdvisoryId(url: string): GitHubAdvisoryId {
-  return url.split("/")[4] as GitHubAdvisoryId;
+  const match = url.match(/GHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}/i);
+  if (match) {
+    return match[0] as GitHubAdvisoryId;
+  }
+  const fromPath = url.split("/").find((segment) => segment.startsWith("GHSA-"));
+  if (fromPath) {
+    return fromPath as GitHubAdvisoryId;
+  }
+  throw new Error(`Invalid GitHub advisory URL: ${url}`);
 }
 
 export function gitHubAdvisoryIdToUrl<T extends string>(
