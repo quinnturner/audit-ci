@@ -23,6 +23,9 @@ describe("gitHubAdvisoryUrlToAdvisoryId", () => {
       gitHubAdvisoryUrlToAdvisoryId("https://github.com/advisories/GHSA-qrpm-p2h7-hrv2"),
     ).toEqual("GHSA-qrpm-p2h7-hrv2");
     expect(gitHubAdvisoryUrlToAdvisoryId("https://github.com/advisories/GHSA-1")).toEqual("GHSA-1");
+    expect(() => gitHubAdvisoryUrlToAdvisoryId("https://example.com/no-advisory")).toThrow(
+      "Invalid GitHub advisory URL",
+    );
   });
 });
 
