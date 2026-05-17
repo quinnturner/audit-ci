@@ -48,6 +48,32 @@ describe("runProgram", () => {
     expect(stderr).toEqual(["not found"]);
   });
 
+  it("routes subprocess stderr to the stderr listener", async () => {
+    const stderr: unknown[] = [];
+    await runProgram(
+      process.execPath,
+      ["-e", 'console.error(JSON.stringify({ type: "error", data: "yarn failed" }))'],
+      { cwd: process.cwd() },
+      () => {},
+      (data) => {
+        stderr.push(data);
+      },
+    );
+    expect(stderr).toEqual([{ type: "error", data: "yarn failed" }]);
+  });
+
+  it("rejects when stdout is not valid JSON", async () => {
+    await expect(
+      runProgram(
+        process.execPath,
+        ["-e", "console.log('not json')"],
+        { cwd: process.cwd() },
+        () => {},
+        () => {},
+      ),
+    ).rejects.toThrow("not json");
+  });
+
   it("routes stdout listener errors to the stderr listener", async () => {
     const stderr: unknown[] = [];
     await runProgram(

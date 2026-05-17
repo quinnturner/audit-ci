@@ -129,10 +129,22 @@ export function runProgram(
   let recentMessage: string;
   let errorMessage: string;
   proc.stdout.setEncoding("utf8");
+  if (proc.stderr) {
+    proc.stderr.setEncoding("utf8");
+    const stderrTransform = new ReadlineTransform({ skipEmpty: true });
+    proc.stderr.pipe(stderrTransform);
+    stderrTransform.on("data", (line: string) => {
+      try {
+        stderrListener(JSON.parse(line));
+      } catch {
+        stderrListener(line);
+      }
+    });
+  }
   proc.stdout
     .pipe(
       transform.on("error", (error: unknown) => {
-        throw error;
+        errorMessage = error instanceof Error ? error.message : String(error);
       }),
     )
     .pipe(
@@ -145,7 +157,6 @@ export function runProgram(
       // @ts-expect-error -- JSONStream.parse() accepts (pattern: any) when it should accept (pattern?: any)
       JSONStream.parse().on("error", () => {
         errorMessage = recentMessage;
-        throw new Error(errorMessage);
       }),
     )
     .pipe(
