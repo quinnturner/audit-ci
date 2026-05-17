@@ -11,7 +11,10 @@ export async function runAuditCi() {
   const { "package-manager": packageManager, "output-format": outputFormat } = auditCiConfig;
 
   try {
-    await audit(auditCiConfig);
+    const result = await audit(auditCiConfig);
+    if (result === undefined) {
+      return;
+    }
     if (outputFormat === "text") {
       console.log(green, `Passed ${packageManager} security audit.`);
     }
