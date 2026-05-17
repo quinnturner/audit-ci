@@ -14,8 +14,7 @@ const PARTIAL_RETRY_ERROR_MSG = {
   // Between them, all three use the phrasing 'not support audit'.
   npm: [`not support audit`],
   yarn: ["503 Service Unavailable"],
-  // TODO: Identify retry-able error message for pnpm
-  pnpm: [],
+  pnpm: [`not support audit`, `ENOAUDIT`],
 } as const;
 
 function getAuditor(
